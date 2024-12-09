@@ -1,4 +1,9 @@
-# DannyMa-8-weeks-SQL-Challenge. 
+# DannyMa-8-weeks-SQL-Challenge.
+# Table of Content
+- [Project Overview](#project-overview)
+- [Challenge Overview](#challenge-overview)
+- [ Database and Table Creation Code](#database-and-table-creation-code)
+# Project Overview
 #### This project aims to provide answers to the popular Danny Ma 8 weeks SQL challenge. <br>
 The link to the site for getting started and table creation SQL code. [Click here..](https://8weeksqlchallenge.com/getting-started/) <br>
 Tool used: MySQL
