@@ -84,3 +84,66 @@ ORDER BY 1;
  FROM customer_orders
  GROUP BY 1
  ORDER BY day_name
+
+# Runners and Customer Experience
+-- Q1. How many runners signed up for each 1 week period? (week starts from 2021-01-01)
+SELECT CONCAT("Week starting from ", DATE_ADD("2021-01-01",INTERVAL FLOOR(DATEDIFF(registration_date,"2021-01-01")/7) WEEK)) AS week_inteval,
+COUNT(runner_id) AS registered_runners
+FROM runners
+GROUP BY 1;
+
+-- Q2. What is the average time in minutes it took for each runner to arrive at the pizza runner HQ to pick up the order?
+SELECT runner_id, ROUND(AVG(TIMESTAMPDIFF(MINUTE,order_time,pickup_time)),2) AS avg_time_in_mins
+FROM runner_orders
+JOIN customer_orders
+USING(order_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY runner_id;
+
+-- Q3. Is there relationship between the number of pizzas and how long the order takes to prepare?
+WITH preparation_time AS 
+(
+SELECT runner_orders.order_id,MAX(TIMESTAMPDIFF(SECOND,order_time,pickup_time)) AS max_prep_time,
+COUNT(pizza_id) AS count_per_order
+FROM runner_orders 
+JOIN customer_orders
+USING(order_id)
+WHERE pickup_time IS NOT NULL
+GROUP BY runner_orders.order_id
+)
+SELECT count_per_order, ROUND(AVG(max_prep_time),2) Avg_order_time_in_sec
+FROM preparation_time
+GROUP BY count_per_order;
+-- We can say the average time used in preparation is directly proportional to the number of pizza ordered.
+
+-- 	Q4. What is the average distance travelled for each customer?
+SELECT customer_id,ROUND(AVG(distance_in_km),2) AS average_distance_covered
+FROM customer_orders
+JOIN runner_orders
+USING(order_id)
+GROUP BY customer_id;
+
+-- Q5.What is the difference between the longest and shortest delivery times for all orders?
+SELECT CONCAT(MAX(duration_in_mins) - MIN(duration_in_mins) ," mins") AS time_range_in_mins
+FROM runner_orders
+WHERE duration_in_mins IS NOT NULL;
+
+-- Q6. What was the average speed for each runner for each delivery and do you notice any trends for these values?
+SELECT runner_id,ROUND(((distance_in_km * 1000) / (duration_in_mins * 60)),2)AS speed_in_mpersec
+FROM runner_orders
+WHERE distance_in_km IS NOT NULL
+ORDER BY runner_id;
+
+-- Q7. What is the successful delivery percentage for each runner?
+WITH delivery_measure AS
+(
+SELECT runner_id, COUNT( CASE WHEN pickup_time IS NOT NULL THEN 1
+END) AS success,
+COUNT(CASE WHEN pickup_time IS NULL THEN 1 END) AS failure
+FROM runner_orders
+GROUP BY runner_id
+)
+SELECT runner_id, success,failure,
+ROUND(100.0 * success / (success + failure), 2) AS success_percentage
+FROM delivery_measure;
+
